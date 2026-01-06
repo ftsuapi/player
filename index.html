@@ -3,134 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreamLine Media Hub</title>
+    <title>GitHub Library Player</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { background-color: #0f172a; color: #f8fafc; }
-        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        .active-item { background: linear-gradient(90deg, #3b82f6, #2563eb); }
-        video, audio { width: 100%; border-radius: 0.75rem; outline: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .active-track { background: rgba(139, 92, 246, 0.2); border-left: 4px solid #8b5cf6; }
+        input[type="range"] { accent-color: #8b5cf6; }
+        .animate-spin-slow { animation: spin 8s linear infinite; animation-play-state: paused; }
+        .playing .animate-spin-slow { animation-play-state: running; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden">
+<body class="flex items-center justify-center p-4">
 
-    <header class="h-16 flex items-center justify-between px-6 glass-panel z-10">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <i class="fas fa-play text-white"></i>
-            </div>
-            <h1 class="text-xl font-bold tracking-tight">StreamLine <span class="text-blue-500 text-sm font-normal">Media Hub</span></h1>
-        </div>
-        <div id="status-indicator" class="text-xs text-slate-400 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-green-500"></span> Connected
-        </div>
-    </header>
-
-    <div class="flex flex-1 overflow-hidden">
-        <aside class="w-64 glass-panel border-r border-slate-800 flex flex-col hidden md:flex">
-            <nav class="p-4 space-y-2">
-                <button onclick="switchCategory('music')" id="btn-music" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all active-item">
-                    <i class="fas fa-music"></i> Music Library
-                </button>
-                <button onclick="switchCategory('video')" id="btn-video" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all">
-                    <i class="fas fa-film"></i> Video Collection
-                </button>
-            </nav>
-        </aside>
-
-        <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
-            <div class="flex-1 p-4 md:p-8 flex flex-col items-center justify-center bg-slate-950/30">
-                <div id="player-container" class="w-full max-w-4xl aspect-video glass-panel rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center relative">
-                    <div id="no-media" class="text-center p-8">
-                        <i class="fas fa-folder-open text-6xl text-slate-700 mb-4"></i>
-                        <h2 class="text-xl font-semibold text-slate-500">Select a file to play</h2>
-                    </div>
-                    <video id="video-player" controls class="hidden w-full h-full bg-black"></video>
-                    <div id="audio-container" class="hidden flex flex-col items-center justify-center w-full h-full p-12 bg-gradient-to-br from-slate-900 to-blue-900">
-                        <div class="w-32 h-32 md:w-48 md:h-48 bg-slate-800 rounded-full flex items-center justify-center mb-8 shadow-2xl animate-pulse">
-                            <i class="fas fa-music text-6xl text-blue-400"></i>
-                        </div>
-                        <h3 id="now-playing-title" class="text-2xl font-bold mb-2 text-center truncate w-full">Track Title</h3>
-                        <audio id="audio-player" controls class="w-full"></audio>
-                    </div>
+    <div id="main-player" class="glass w-full max-w-5xl rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-2xl min-h-[600px]">
+        
+        <!-- Left: Visualization & Info -->
+        <div class="p-10 w-full md:w-1/2 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/10">
+            <div class="relative w-64 h-64 mb-10">
+                <div class="absolute inset-0 bg-purple-500 rounded-full blur-3xl opacity-10"></div>
+                <div class="animate-spin-slow w-full h-full rounded-full border-4 border-slate-700 p-2 bg-slate-800 shadow-2xl overflow-hidden">
+                    <img id="track-art" src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=400&fit=crop" class="w-full h-full object-cover rounded-full">
                 </div>
             </div>
 
-            <div class="w-full md:w-80 glass-panel border-l border-slate-800 flex flex-col overflow-hidden">
-                <div class="p-4 border-b border-slate-800">
-                    <h3 class="font-bold flex items-center gap-2">Playlist</h3>
-                </div>
-                <div id="playlist" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1"></div>
+            <div class="text-center mb-8">
+                <h1 id="track-title" class="text-2xl font-bold">Loading Repository...</h1>
+                <p id="track-artist" class="text-slate-400 text-sm mt-1">GitHub Music Library</p>
             </div>
-        </main>
+
+            <div class="w-full px-4">
+                <input type="range" id="progress" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer" value="0">
+                <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-2">
+                    <span id="current-time">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-6 mt-8">
+                <button id="prev" class="text-slate-400 hover:text-white transition-colors"><svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M4 4a.5.5 0 0 1 1 0v3.248l6.267-3.636c.52-.302 1.166.077 1.166.677v7.422c0 .6-.646.979-1.166.677L5 8.752V12a.5.5 0 0 1-1 0V4zm7 7.82V4.18L5.697 8 11 11.82z"/></svg></button>
+                <button id="play" class="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform">
+                    <svg id="play-icon" width="28" height="28" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+                </button>
+                <button id="next" class="text-slate-400 hover:text-white transition-colors"><svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M12.5 4a.5.5 0 0 0-1 0v3.248L5.233 3.612C4.713 3.31 4.067 3.69 4.067 4.29v7.422c0 .6.646.979 1.166.677L11.5 8.752V12a.5.5 0 0 0 1 0V4zm-7 7.82V4.18L10.303 8 5.5 11.82z"/></svg></button>
+            </div>
+        </div>
+
+        <!-- Right: Repository Playlist -->
+        <div class="p-8 w-full md:w-1/2 flex flex-col bg-black/20">
+            <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2.2.5-2.7-1.1-2.7-1.1-.4-1-1-1.3-1-1.3-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.2 1.8.9 2.2.7 0-.5.3-.9.5-1.1-1.8-.2-3.7-.9-3.7-4.1 0-.9.3-1.6.8-2.2 0-.2-.3-1 .1-2.1 0 0 .7-.2 2.2.8.6-.2 1.3-.3 2-.3s1.4.1 2 .3c1.5-1 2.2-.8 2.2-.8.4 1.1.1 1.9.1 2.1.5.6.8 1.3.8 2.2 0 3.2-1.9 3.9-3.7 4.1.3.3.5.8.5 1.6v2.3c0 .2.1.4.5.4A8 8 0 0 0 8 0z"/></svg>
+                Repository Music
+            </h2>
+            
+            <div id="playlist" class="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                <!-- Tracks will load here -->
+            </div>
+            
+            <div class="mt-6 p-4 rounded-2xl bg-white/5 border border-white/10">
+                <p class="text-[11px] text-slate-500 leading-relaxed">
+                    <strong>Note:</strong> Upload MP3 files to a folder named <code class="text-purple-400">music</code> in your repo, then add their filenames to the <code class="text-purple-400">SONG_LIST</code> array in this file's code.
+                </p>
+            </div>
+        </div>
     </div>
 
+    <audio id="audio"></audio>
+
     <script>
-        const API_URL = 'get_media.php'; 
-        const BASE_MUSIC = 'music';
-        const BASE_VIDEO = 'video';
+        /**
+         * CONFIGURATION
+         * Add your filenames exactly as they appear in your /music/ folder
+         */
+        const SONG_LIST = [
+            "Westaroni.mp3",
+            "Mid Weast.mp3"
+        ];
+        
+        // This helper gets the base path for your GitHub Pages site
+        const BASE_PATH = window.location.pathname.includes('index.html') 
+            ? window.location.pathname.replace('index.html', '') 
+            : window.location.pathname;
+        
+        const musicFolder = `${BASE_PATH}music/`;
 
-        let currentCategory = 'music';
-        let mediaData = { music: [], video: [] };
+        const audio = document.getElementById('audio');
+        const playlistEl = document.getElementById('playlist');
+        const trackTitle = document.getElementById('track-title');
+        const playBtn = document.getElementById('play');
+        const playIcon = document.getElementById('play-icon');
+        const progress = document.getElementById('progress');
+        
+        let currentIndex = 0;
+        let isPlaying = false;
 
-        async function init() {
-            try {
-                const response = await fetch(API_URL);
-                if (!response.ok) throw new Error('Network response was not ok');
-                mediaData = await response.json();
-                renderPlaylist();
-            } catch (error) {
-                document.getElementById('playlist').innerHTML = `<div class="p-4 text-red-400 text-sm">Error: Ensure get_media.php is on your server.</div>`;
+        const tracks = SONG_LIST.map(filename => ({
+            name: filename.replace('.mp3', '').replace(/-/g, ' '),
+            url: musicFolder + filename,
+            filename: filename
+        }));
+
+        function init() {
+            if (tracks.length === 0) {
+                trackTitle.innerText = "No songs found in SONG_LIST";
+                return;
             }
-        }
-
-        function switchCategory(cat) {
-            currentCategory = cat;
-            document.getElementById('btn-music').className = `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${cat === 'music' ? 'active-item' : ''}`;
-            document.getElementById('btn-video').className = `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${cat === 'video' ? 'active-item' : ''}`;
             renderPlaylist();
+            loadTrack(0);
         }
 
         function renderPlaylist() {
-            const list = mediaData[currentCategory] || [];
-            const container = document.getElementById('playlist');
-            if (list.length === 0) {
-                container.innerHTML = `<div class="p-4 text-slate-500 text-sm text-center">No files found in /${currentCategory}</div>`;
-                return;
-            }
-            container.innerHTML = list.map((item, i) => `
-                <div onclick="playMedia(${i})" class="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-slate-800 transition-all">
-                    <i class="fas ${currentCategory === 'music' ? 'fa-music' : 'fa-film'} text-slate-500"></i>
-                    <div class="truncate text-sm font-medium text-slate-200">${item.title}</div>
-                </div>
-            `).join('');
+            playlistEl.innerHTML = '';
+            tracks.forEach((track, index) => {
+                const div = document.createElement('div');
+                div.className = `p-4 rounded-xl cursor-pointer flex items-center justify-between transition-all hover:bg-white/5 ${index === currentIndex ? 'active-track' : ''}`;
+                div.innerHTML = `
+                    <div class="truncate pr-4">
+                        <div class="font-medium truncate">${track.name}</div>
+                        <div class="text-[10px] text-slate-500 uppercase tracking-widest">Available</div>
+                    </div>
+                    <div class="text-slate-600 text-xs">MP3</div>
+                `;
+                div.onclick = () => loadTrack(index, true);
+                playlistEl.appendChild(div);
+            });
         }
 
-        function playMedia(index) {
-            const item = mediaData[currentCategory][index];
-            const path = currentCategory === 'music' ? BASE_MUSIC : BASE_VIDEO;
+        function loadTrack(index, playImmediately = false) {
+            currentIndex = index;
+            const track = tracks[index];
+            audio.src = track.url;
+            trackTitle.innerText = track.name;
             
-            document.getElementById('no-media').classList.add('hidden');
-            const v = document.getElementById('video-player');
-            const aCont = document.getElementById('audio-container');
-            const a = document.getElementById('audio-player');
+            renderPlaylist();
 
-            v.pause(); a.pause();
-            v.classList.add('hidden'); aCont.classList.add('hidden');
+            // Handle errors (e.g. file doesn't exist in the folder)
+            audio.onerror = () => {
+                trackTitle.innerText = "Error: File not found";
+                console.error(`Could not load: ${track.url}`);
+            };
 
-            if (currentCategory === 'video') {
-                v.classList.remove('hidden');
-                v.src = `${path}/${item.file}`;
-                v.play();
+            if (playImmediately) togglePlay(true);
+        }
+
+        function togglePlay(forcePlay = null) {
+            const shouldPlay = forcePlay !== null ? forcePlay : !isPlaying;
+            
+            if (shouldPlay) {
+                audio.play().catch(e => console.log("User interaction required"));
+                playIcon.innerHTML = `<path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>`;
+                document.getElementById('main-player').classList.add('playing');
+                isPlaying = true;
             } else {
-                aCont.classList.remove('hidden');
-                document.getElementById('now-playing-title').innerText = item.title;
-                a.src = `${path}/${item.file}`;
-                a.play();
+                audio.pause();
+                playIcon.innerHTML = `<path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>`;
+                document.getElementById('main-player').classList.remove('playing');
+                isPlaying = false;
             }
+        }
+
+        playBtn.onclick = () => togglePlay();
+        document.getElementById('next').onclick = () => loadTrack((currentIndex + 1) % tracks.length, true);
+        document.getElementById('prev').onclick = () => loadTrack((currentIndex - 1 + tracks.length) % tracks.length, true);
+
+        audio.ontimeupdate = () => {
+            const p = (audio.currentTime / audio.duration) * 100;
+            progress.value = p || 0;
+            document.getElementById('current-time').innerText = formatTime(audio.currentTime);
+            document.getElementById('duration').innerText = formatTime(audio.duration);
+        };
+
+        progress.oninput = () => {
+            audio.currentTime = (progress.value / 100) * audio.duration;
+        };
+
+        audio.onended = () => document.getElementById('next').click();
+
+        function formatTime(s) {
+            if (isNaN(s)) return "0:00";
+            const m = Math.floor(s / 60);
+            const r = Math.floor(s % 60);
+            return `${m}:${r < 10 ? '0' : ''}${r}`;
         }
 
         init();
