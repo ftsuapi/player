@@ -202,7 +202,34 @@ fill="#ffffff" stroke="none">
             
             <div class="mt-6 p-4 rounded-2xl bg-white/5 border border-white/10">
                 <p class="text-[11px] text-slate-500 leading-relaxed">
-                
+                <!-- Add this where you want the counter to show -->
+<div id="visitor-stats" style="font-family: sans-serif; padding: 10px; border: 1px solid #ddd; border-radius: 8px; display: inline-block;">
+  Visitors: <span id="count">Loading...</span>
+</div>
+
+<script>
+  async function updateCounter() {
+    try {
+      // Call the Pages Function we created
+      const response = await fetch('/api/counter');
+      const data = await response.json();
+      
+      if (data.count) {
+        document.getElementById('count').textContent = data.count.toLocaleString();
+      } else {
+        document.getElementById('count').textContent = 'Error';
+      }
+    } catch (error) {
+      console.error('Counter error:', error);
+      document.getElementById('count').textContent = 'Unavailable';
+    }
+  }
+
+  // Run on page load
+  updateCounter();
+</script>
+
+
                 </p>
             </div>
         </div>
